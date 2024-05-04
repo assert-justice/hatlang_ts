@@ -1,0 +1,11 @@
+; inboxes two numbers, adds them, and outboxes the result
+
+inp
+inp
+sav &1
+dup
+add
+lod &1
+out
+out
+out
