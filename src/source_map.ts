@@ -1,6 +1,6 @@
 import { Token } from "./token";
 
-interface SourceInfo{
+export interface SourceInfo{
     line: string;
     lineNumber: number;
     charInLine: number;
@@ -15,11 +15,11 @@ export class SourceMap{
     addToken(idx: number, token: Token){
         this.tokenLookup.set(idx, token);
     }
-    getByIdx(idx: number): [SourceInfo, Token] | undefined{
+    getByIdx(idx: number): SourceInfo{
         const token = this.tokenLookup.get(idx);
-        if(!token){return undefined;}
+        if(!token){throw `Invalid program index ${idx}`}
         const info = this.getByCharPos(token.pos);
-        return [info, token];
+        return info;
     }
     getByCharPos(charPos: number): SourceInfo{
         // this could be sped up but isn't performance critical

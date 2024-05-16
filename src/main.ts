@@ -33,6 +33,7 @@ function run(cli: Cli){
     }
     decompile(new Uint8Array(code));
     const interpreter = new Interpreter();
+    interpreter.error.sourceMap = error.sourceMap;
     interpreter.init(code, [5, 10]);
     interpreter.run();
     console.log(interpreter.outbox);

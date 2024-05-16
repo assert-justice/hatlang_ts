@@ -1,5 +1,5 @@
 import { Token } from "./token";
-import { SourceMap } from "./source_map";
+import { SourceInfo, SourceMap } from "./source_map";
 
 interface ErrorMessage{
     message: string;
@@ -8,17 +8,26 @@ interface ErrorMessage{
 }
 
 export class Error{
-    // src: string = "";
-    // pos = 0;
-    // static fromSource(src: string): Error{
-    //     return new Error(new SourceMap(src));
-    // }
     sourceMap: SourceMap;
     get hasError(){return this._messages.length > 0;}
     private _messages: ErrorMessage[] = [];
     get message(){
-        // TODO: improve error reporting
-        return this._messages.map(m=>m.message).join("\n");
+        return this._messages.map(({message, idx, charPos})=>{
+            // const lines: string[] = [];
+            let info: SourceInfo;
+            if(charPos !== undefined){
+                info = this.sourceMap.getByCharPos(charPos);
+            }
+            else if(idx !== undefined){
+                info = this.sourceMap.getByIdx(idx);
+            }
+            else{
+                throw `should be unreachable`;
+            }
+            message = `Error on line ${info.lineNumber}: ${message}`;
+            const charMark = Array(info.line.length).fill(null).map((_,idx)=>idx === info.charInLine ? "^" : "=");
+            return [message, info.line, charMark].join("\n");
+        }).join("\n");
     }
     constructor(src: string){
         this.sourceMap = new SourceMap(src);

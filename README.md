@@ -5,6 +5,7 @@ This is a HatLang interpreter written in TypeScript. HatLang is a stack based ps
 ## Command Line Interface
 
 - run [path to source]
+- minify [path to source]
 - build [path to source] [path to destination]
 - validate [path to source] [path to test]
 
