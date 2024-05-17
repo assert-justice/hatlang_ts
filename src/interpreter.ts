@@ -91,14 +91,14 @@ export class Interpreter{
         addFn("rng", ()=>this.rng());
         addFn("dmp", ()=>this.dmp());
     }
-    init(program: ArrayBuffer, inbox: number[], validOutbox?: number[], sourceMap?: SourceMap){
+    init(program: ArrayBuffer, inbox: number[], error: Error, validOutbox?: number[]){
         this.inbox = [...inbox];
         this.inbox.reverse();
         this.outbox = [];
         this.validOutbox = validOutbox;
         this.signedView = new Int8Array(program);
         this.program = new Uint8Array(program);
-        if(sourceMap) this.error.sourceMap = sourceMap;
+        this.error = error;
         this.initialized = true;
         this.registers = this.registers.map(()=>0);
     }
@@ -108,8 +108,6 @@ export class Interpreter{
     run(){
         this.checkInit();
         while(this.state === 'running' && !this.error.hasError) this.step();
-        if(this.error.hasError) console.log(this.error.message);
-        
     }
     pause(){
         this.state = 'paused';

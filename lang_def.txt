@@ -22,8 +22,8 @@
 | JSR | 0x25 | 0 | 2 | LABEL | Jump to subroutine, pushing the instruction pointer to the stack in two bytes|
 | RET | 0x26 | 2 | 0 | LABEL | Return from subroutine, popping the top two elements and using them as the instruction pointer|
 | Registers |
-| LOD | 0x30 | 0 | 1 | REG | Load a value from the given register and push it|
-| SAV | 0x31 | 1 | 0 | REG | Pop a value and save it to the given register|
+| LOD | 0x30 | 0 | 1 | REGISTER | Load a value from the given register and push it|
+| SAV | 0x31 | 1 | 0 | REGISTER | Pop a value and save it to the given register|
 | Miscellaneous |
 | LAB | 0x00 | 0 | 0 | LABEL | Pseudo instruction used to create labels in source files. Never emitted |
 | HLT | 0x40 | 0 | 0 | NONE | Halt execution|

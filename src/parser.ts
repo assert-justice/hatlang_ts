@@ -3,10 +3,9 @@ import { Token, TokenType } from "./token";
 
 // labels start with #, registers start with &, hex numbers start with a $
 
-export function parse(src: string): Token[] | Error{
+export function parse(src: string, error: Error): Token[]{
     src = src.toUpperCase();
     const tokens: Token[] = [];
-    const error = new Error(src);
     let start = 0;
     let current = 0;
     let line = 1;
@@ -15,10 +14,10 @@ export function parse(src: string): Token[] | Error{
     const peek = ()=>{
         return src[current];
     }
-    const next = ()=>{
-        if(atEof()) return "";
-        return src[current+1];
-    }
+    // const next = ()=>{
+    //     if(atEof()) return "";
+    //     return src[current+1];
+    // }
     const advance = ()=>{
         current++;
         return src[current-1];
@@ -132,7 +131,7 @@ export function parse(src: string): Token[] | Error{
         }
     }
     if(error.hasError){
-        return error;
+        return [];
     }
     return tokens;
 }

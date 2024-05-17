@@ -79,8 +79,7 @@ class OpLookup{
     }
 }
 
-export function compile(tokens: Token[], src: string): [ArrayBuffer, Error]{
-    const error = new Error(src);
+export function compile(tokens: Token[], error: Error): ArrayBuffer{
     const data = new ArrayBuffer(PROGRAM_SIZE);
     const view = new Uint8Array(data);
     const jumpTable = new JumpTable();
@@ -90,9 +89,9 @@ export function compile(tokens: Token[], src: string): [ArrayBuffer, Error]{
     const atEof = (): boolean=>{
         return current >= tokens.length;
     }
-    const peek = ()=>{
-        return tokens[current];
-    }
+    // const peek = ()=>{
+    //     return tokens[current];
+    // }
     const advance = ()=>{
         current++;
         return tokens[current-1];
@@ -120,6 +119,7 @@ export function compile(tokens: Token[], src: string): [ArrayBuffer, Error]{
             continue;
         }
         const {name, code, arg} = op;
+        
         if(arg === "NONE") {
             emit(code);
             continue;
@@ -164,17 +164,18 @@ export function compile(tokens: Token[], src: string): [ArrayBuffer, Error]{
                 emit(0);
                 break;
             default:
+                error.setErrorAtChar(argVal.pos,`Unexpected ${argVal.type}`);
                 break;
         }
     }
     if(error.hasError){
-        return [data, error];
+        return new ArrayBuffer(0);
     }
     // resolve labels
     for (const [name, {idx, targets, isIdxSet, pos}] of jumpTable.data.entries()) {
         if(!isIdxSet){
             error.setErrorAtChar(pos, `Label '${name}' is never set!`);
-            return [data, error];
+            new ArrayBuffer(0);
         }
         // Should this be an error? I don't want to bother with warnings.
         // if(entry.targets.length === 0){
@@ -189,5 +190,5 @@ export function compile(tokens: Token[], src: string): [ArrayBuffer, Error]{
             view[target+1] = low;
         }
     }
-    return [data, error];
+    return data;
 }

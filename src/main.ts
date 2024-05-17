@@ -4,39 +4,50 @@ import { parse } from './parser';
 import { compile } from './compiler';
 import { decompile } from './decompiler';
 import { Interpreter } from './interpreter';
+import { Error } from './error';
 
 function run(cli: Cli){
     const fname = cli.pop();
     if(cli.hasError) {
-        console.log("Missing positional argument, filename");
-        return
+        throw "Missing positional argument, filename";
     }
     let src = "";
     try{
         src = fs.readFileSync(fname, {encoding: 'utf-8'});
     }
     catch{
-        console.log(`Unable to read file at ${fname}`);
-        return;
+        throw `Unable to read file at ${fname}`;
     }
-    const tokens = parse(src);
-    if(!Array.isArray(tokens)){
-        console.log(tokens.message);
-        return;
-    }
-    // console.log(tokens);
-    
-    const [code, error] = compile(tokens, src);
-    if(error.hasError){
-        console.log(error.message);
-        return;
-    }
+    const error = new Error(src);
+    const tokens = parse(src, error);
+    if(error.hasError) {console.log(error.message); return;}
+
+    const code = compile(tokens, error);
+    if(error.hasError) {console.log(error.message); return;}
+
     decompile(new Uint8Array(code));
     const interpreter = new Interpreter();
-    interpreter.error.sourceMap = error.sourceMap;
-    interpreter.init(code, [5, 10]);
+    interpreter.init(code, [5,10], error);
     interpreter.run();
+    if(error.hasError) {console.log(error.message); return;}
     console.log(interpreter.outbox);
+    
+    // if(!Array.isArray(tokens)){
+    //     console.log(tokens.message);
+    //     return;
+    // }
+    
+    // const [code, error] = compile(tokens, src);
+    // if(error.hasError){
+    //     console.log(error.message);
+    //     return;
+    // }
+    // decompile(new Uint8Array(code));
+    // const interpreter = new Interpreter();
+    // interpreter.error.sourceMap = error.sourceMap;
+    // interpreter.init(code, [5, 10]);
+    // interpreter.run();
+    // console.log(interpreter.outbox);
     
 }
 

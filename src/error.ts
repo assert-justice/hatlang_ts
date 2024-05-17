@@ -38,6 +38,6 @@ export class Error{
     }
     setErrorAtIdx(idx: number, message: string){
         // TODO: actually implement this
-        this._messages.push({message, charPos: -1});
+        this._messages.push({message, idx});
     }
 }

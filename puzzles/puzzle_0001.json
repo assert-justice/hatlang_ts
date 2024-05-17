@@ -1,0 +1,21 @@
+{
+    "name": "Copy",
+    "description": "Inrack and outrack two hats, maintaining their order.",
+    "runs": [
+        {
+            "inbox": [5, 10],
+            "outbox": [5, 10],
+            "cycles": 4
+        },
+        {
+            "inbox": [50, -50],
+            "outbox": [50, -50],
+            "cycles": 4
+        },
+        {
+            "gen": "RNG RNG OUT OUT"
+        }
+    ],
+    "size_goal": 4,
+    "impl": "INP OUT INP OUT"
+}

@@ -1,0 +1,21 @@
+{
+    "name": "Reverse",
+    "description": "Inrack two hats ant outrack them in reverse order.",
+    "runs": [
+        {
+            "inbox": [5, 10],
+            "outbox": [10, 5],
+            "cycles": 4
+        },
+        {
+            "inbox": [50, -50],
+            "outbox": [-50, 50],
+            "cycles": 4
+        },
+        {
+            "gen": "RNG RNG OUT OUT"
+        }
+    ],
+    "size_goal": 4,
+    "impl": "INP INP OUT OUT"
+}
