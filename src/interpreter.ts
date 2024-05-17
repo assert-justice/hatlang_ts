@@ -16,7 +16,6 @@ export class Interpreter{
         return high + low;
     }
     set ip(val: number){
-        // TODO: bounds checking
         const high = val >> 8;
         const low = val - (high >> 8);
         this.program[IP_HIGH_POS] = high;
@@ -133,7 +132,6 @@ export class Interpreter{
             this.setError(`Unrecognized opcode '${code}'`);
             return;
         }
-        // TODO: check here for stack under/overflow
         const len = this.sp;
         
         if(op.pops > len){
@@ -165,20 +163,14 @@ export class Interpreter{
         this.ip += opLen;
         fn();
     }
-    // len(): number{
-        // stack length
-        // return this.program[STACK_POINTER_POS];
-    // }
     pop(): number{
         // underflow check in step()
         const res = this.stackTop;
-        // this.program[STACK_POINTER_POS]--;
         this.sp--;
         return res;
     }
     push(val: number){
         // overflow check in step()
-        // this.program[STACK_POINTER_POS]++;
         this.sp++;
         this.stackTop = val;
     }
@@ -189,17 +181,27 @@ export class Interpreter{
     }
     inp(){
         // check if inbox is empty. if it is, halt. not necessarily an error
-        // if in validate mode, triggers final validation
         const val = this.inbox.pop();
         if(!val){
-            this.state = 'stopped';
+            this.hlt();
             return;
         }
         this.push(val);
     }
     out(){
-        // if in validation mode, triggers partial/final validation
+        // TODO: if in validation mode, triggers partial validation
         this.outbox.push(this.pop());
+        if(!this.validOutbox) return;
+        if(this.outbox.length > this.validOutbox.length){
+            this.setError("Too many elements in outrack!");
+            return;
+        }
+        for(let idx = 0; idx < this.outbox.length; idx++){
+            if(this.outbox[idx] !== this.validOutbox[idx]){
+                this.setError("Invalid element in outrack!");
+                return;
+            }
+        }
     }
     jmp(){
         const high = this.program[this.ip-2] << 8;
@@ -229,6 +231,9 @@ export class Interpreter{
     hlt(){
         // if in validate mode trigger final validate
         this.state = 'stopped';
+        if(this.validOutbox && this.validOutbox.length > this.outbox.length){
+            this.setError("Not enough elements in outrack!");
+        }
     }
     rng(){
         const val = Math.floor(Math.random() * 256);

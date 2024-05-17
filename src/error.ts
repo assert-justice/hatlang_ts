@@ -33,11 +33,9 @@ export class Error{
         this.sourceMap = new SourceMap(src);
     }
     setErrorAtChar(charPos: number, message: string){
-        // TODO: throw error if a message has already been set?
         this._messages.push({message, charPos});
     }
     setErrorAtIdx(idx: number, message: string){
-        // TODO: actually implement this
         this._messages.push({message, idx});
     }
 }

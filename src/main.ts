@@ -18,6 +18,36 @@ function run(cli: Cli){
     catch{
         throw `Unable to read file at ${fname}`;
     }
+    let decomp = false;
+    const inrack: number[] = [];
+    let outrack: number[] | undefined;
+    while(cli.hasArgs){
+        const arg = cli.pop();
+        if(arg === "-d" || arg === "--decompile") decomp = true;
+        else if(arg === "--in"){
+            if(!cli.hasArgs){
+                console.log("in command must be followed by a csv of numbers");
+                return;
+            }
+            const vals = cli.pop().split(",").filter(s => s.trim().length > 0).map(s => +s);
+            for (const val of vals) {
+                if(typeof val !== "number") {console.log("Invalid number in input"); return;}
+                inrack.push(val);
+            }
+        }
+        else if(arg === "--out"){
+            if(!cli.hasArgs){
+                console.log("out command must be followed by a csv of numbers");
+                return;
+            }
+            const vals = cli.pop().split(",").filter(s => s.trim().length > 0).map(s => +s);
+            outrack = [];
+            for (const val of vals) {
+                if(typeof val !== "number") {console.log("Invalid number in input"); return;}
+                outrack.push(val);
+            }
+        }
+    }
     const error = new Error(src);
     const tokens = parse(src, error);
     if(error.hasError) {console.log(error.message); return;}
@@ -25,30 +55,12 @@ function run(cli: Cli){
     const code = compile(tokens, error);
     if(error.hasError) {console.log(error.message); return;}
 
-    decompile(new Uint8Array(code));
+    if(decomp) decompile(new Uint8Array(code));
     const interpreter = new Interpreter();
-    interpreter.init(code, [5,10], error);
+    interpreter.init(code, inrack, error, outrack);
     interpreter.run();
-    if(error.hasError) {console.log(error.message); return;}
+    if(error.hasError) {console.log(error.message); interpreter.dmp(); return;}
     console.log(interpreter.outbox);
-    
-    // if(!Array.isArray(tokens)){
-    //     console.log(tokens.message);
-    //     return;
-    // }
-    
-    // const [code, error] = compile(tokens, src);
-    // if(error.hasError){
-    //     console.log(error.message);
-    //     return;
-    // }
-    // decompile(new Uint8Array(code));
-    // const interpreter = new Interpreter();
-    // interpreter.error.sourceMap = error.sourceMap;
-    // interpreter.init(code, [5, 10]);
-    // interpreter.run();
-    // console.log(interpreter.outbox);
-    
 }
 
 function main(){

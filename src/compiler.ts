@@ -97,7 +97,6 @@ export function compile(tokens: Token[], error: Error): ArrayBuffer{
         return tokens[current-1];
     }
     const emit = (val: number)=>{
-        // TODO: bounds checking
         view[idx] = val;
         idx++;
     }
@@ -132,7 +131,6 @@ export function compile(tokens: Token[], error: Error): ArrayBuffer{
         switch (arg) {
             case "NUMBER":
                 if(argVal.type === 'number') {
-                    // TODO: add bounds checking
                     emit(code);
                     emit(+argVal.literal);
                     continue;
@@ -142,7 +140,6 @@ export function compile(tokens: Token[], error: Error): ArrayBuffer{
             case "REGISTER":
                 if(argVal.type === 'register') {
                     emit(code);
-                    // TODO: add bounds checking
                     emit(+argVal.literal);
                     continue;
                 }
