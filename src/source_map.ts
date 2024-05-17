@@ -16,8 +16,13 @@ export class SourceMap{
         this.tokenLookup.set(idx, token);
     }
     getByIdx(idx: number): SourceInfo{
-        const token = this.tokenLookup.get(idx);
-        if(!token){throw `Invalid program index ${idx}`}
+        let token = this.tokenLookup.get(idx);
+        if(!token){
+            for (const to of this.tokenLookup.values()) {
+                token = to;
+            }
+            if(!token)throw `Invalid program index ${idx}`;
+        }
         const info = this.getByCharPos(token.pos);
         return info;
     }
