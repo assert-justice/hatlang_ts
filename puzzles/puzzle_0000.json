@@ -11,7 +11,9 @@
             "inbox": [50, -50],
             "outbox": [-50, 50],
             "cycles": 4
-        },
+        }
+    ],
+    "codeRuns":[
         {
             "gen": "RNG RNG OUT OUT"
         }

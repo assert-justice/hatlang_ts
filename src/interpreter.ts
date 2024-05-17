@@ -10,6 +10,7 @@ export class Interpreter{
     opLookup = new OpLookup();
     error = new Error("");
     fnMap: Map<number, ()=>void>;
+    cycles = 0;
     get ip(): number{
         const high = this.program[IP_HIGH_POS] << 8;
         const low = this.program[IP_LOW_POS];
@@ -33,17 +34,6 @@ export class Interpreter{
     set stackTop(val: number){
         this.signedView[STACK_POINTER_POS + this.sp] = val;
     }
-    // pop(): number{
-    //     // underflow check in step()
-    //     const res = this.signedView[STACK_POINTER_POS + this.len()];
-    //     this.program[STACK_POINTER_POS]--;
-    //     return res;
-    // }
-    // push(val: number){
-    //     // overflow check in step()
-    //     this.program[STACK_POINTER_POS]++;
-    //     this.signedView[STACK_POINTER_POS + this.len()] = val;
-    // }
     state: 'running' | 'paused' | 'stopped' = 'running';
     initialized = false;
     inbox: number[] = [];
@@ -92,6 +82,10 @@ export class Interpreter{
     }
     init(program: ArrayBuffer, inbox: number[], error: Error, validOutbox?: number[]){
         this.inbox = [...inbox];
+        this.ip = 0;
+        this.sp = 0;
+        this.state = "running";
+        this.cycles = 0;
         this.inbox.reverse();
         this.outbox = [];
         this.validOutbox = validOutbox;
@@ -122,6 +116,7 @@ export class Interpreter{
         this.error.setErrorAtIdx(this.ip, message);
     }
     step(){
+        this.cycles++;
         const code = this.program[this.ip];
         if(code === 0){
             this.hlt();

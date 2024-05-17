@@ -1,22 +1,16 @@
-import * as fs from 'fs';
 import { Cli } from "./cli";
 import { parse } from './parser';
 import { compile } from './compiler';
 import { decompile } from './decompiler';
 import { Interpreter } from './interpreter';
 import { Error } from './error';
+import { puzzleParser } from "./puzzle_parser";
 
 function run(cli: Cli){
-    const fname = cli.pop();
-    if(cli.hasError) {
-        throw "Missing positional argument, filename";
-    }
-    let src = "";
-    try{
-        src = fs.readFileSync(fname, {encoding: 'utf-8'});
-    }
-    catch{
-        throw `Unable to read file at ${fname}`;
+    const src = cli.popFile();
+    if(cli.hasError){
+        console.log(cli.errMessage);
+        return;
     }
     let decomp = false;
     const inrack: number[] = [];
@@ -63,6 +57,41 @@ function run(cli: Cli){
     console.log(interpreter.outbox);
 }
 
+function validate(cli: Cli){
+    const src = cli.popFile();
+    if(cli.hasError){
+        console.log(cli.errMessage);
+        return;
+    }
+    const puzzleSrc = cli.popFile();
+    if(cli.hasError){
+        console.log(cli.errMessage);
+        return;
+    }
+    const error = new Error(src);
+    const tokens = parse(src, error);
+    if(error.hasError) {console.log(error.message); return;}
+
+    const code = compile(tokens, error);
+    if(error.hasError) {console.log(error.message); return;}
+    const interpreter = new Interpreter();
+    const puzzle = puzzleParser(puzzleSrc);
+    if(!puzzle) throw 'oops';
+    let testsPassed = true;
+    for (const run of puzzle.runs) {
+        interpreter.init(code, run.inrack, error, run.outrack);
+        interpreter.run();
+        if(error.hasError){
+            console.log(error.message);
+            testsPassed = false;
+            error.clear();
+        }
+    }
+    if(testsPassed) console.log("All tests passing!");
+    else console.log("Some tests failed");
+    
+}
+
 function main(){
     const cli = new Cli();
     const verb = cli.pop();
@@ -78,7 +107,7 @@ function main(){
             console.log("Not yet implemented");
             break;
         case "validate":
-            console.log("Not yet implemented");
+            validate(cli);
             break;
         default:
             console.log(`Invalid command '${verb}'!`);

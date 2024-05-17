@@ -38,4 +38,7 @@ export class Error{
     setErrorAtIdx(idx: number, message: string){
         this._messages.push({message, idx});
     }
+    clear(){
+        this._messages = [];
+    }
 }
