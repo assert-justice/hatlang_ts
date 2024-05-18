@@ -13,10 +13,8 @@
             "cycles": 4
         }
     ],
-    "codeRuns":[
-        {
-            "gen": "RNG RNG OUT OUT"
-        }
+    "code_runs":[
+        "RNG RNG OUT OUT"
     ],
     "size_goal": 4,
     "impl": "INP INP OUT OUT"

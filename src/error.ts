@@ -25,9 +25,9 @@ export class Error{
                 throw `should be unreachable`;
             }
             message = `Error on line ${info.lineNumber}: ${message}`;
-            const charMark = Array(info.line.length).fill(null).map((_,idx)=>idx === info.charInLine ? "^" : "=");
+            const charMark = Array(info.line.length).fill(null).map((_,idx)=>idx === info.charInLine ? "^" : "=").join("");
             return [message, info.line, charMark].join("\n");
-        }).join("\n");
+        }).join("\n\n");
     }
     constructor(src: string){
         this.sourceMap = new SourceMap(src);

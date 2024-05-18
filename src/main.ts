@@ -78,14 +78,22 @@ function validate(cli: Cli){
     const puzzle = puzzleParser(puzzleSrc);
     if(!puzzle) throw 'oops';
     let testsPassed = true;
+    const numTests = puzzle.runs.length;
+    let testIdx = 1;
     for (const run of puzzle.runs) {
         interpreter.init(code, run.inrack, error, run.outrack);
         interpreter.run();
         if(error.hasError){
+            console.log(`Test [${testIdx}/${numTests}] failed with following:`);
             console.log(error.message);
             testsPassed = false;
             error.clear();
         }
+        else{
+            console.log(`Test [${testIdx}/${numTests}] passed!`);
+        }
+        console.log("");
+        testIdx++;
     }
     if(testsPassed) console.log("All tests passing!");
     else console.log("Some tests failed");

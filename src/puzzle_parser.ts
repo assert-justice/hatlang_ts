@@ -9,6 +9,7 @@ export interface Puzzle{
     name: string;
     description: string;
     runs: PuzzleRun[];
+    codeRuns: string[];
     sizeGoal: number;
     impl: string;
 }
@@ -69,15 +70,15 @@ export function puzzleParser(puzzleSrc: string): Puzzle | undefined{
     const sizeGoal = puzzle.getNumber("size_goal");
     const runs = puzzle.getArray("runs").map((r):PuzzleRun => {
         // getting lazy
-        
         const inrack = r.getArray("inbox").map(j => +j.data);
         const outrack = r.getArray("outbox").map(j => +j.data);
         const cycles = r.getNumber("cycles");
         return {inrack, outrack, cycles};
     });
+    const codeRuns = puzzle.getArray("code_runs").map(r => '' + r.data);
     if(puzzle.hasError) {
         console.log(puzzle.errMessage);
         return;
     }
-    return{name, description, runs, sizeGoal, impl};
+    return{name, description, runs, codeRuns, sizeGoal, impl};
 }

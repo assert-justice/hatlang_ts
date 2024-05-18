@@ -16,10 +16,15 @@ export class SourceMap{
         this.tokenLookup.set(idx, token);
     }
     getByIdx(idx: number): SourceInfo{
-        let token = this.tokenLookup.get(idx);
+        let token = this.tokenLookup.get(idx);        
         if(!token){
-            for (const to of this.tokenLookup.values()) {
-                token = to;
+            let dis = Infinity;
+            for (const [key, to] of this.tokenLookup.entries()) {
+                const tempDis = Math.abs(idx - key);
+                if(tempDis < dis){
+                    dis = tempDis;
+                    token = to;
+                }
             }
             if(!token)throw `Invalid program index ${idx}`;
         }
@@ -37,12 +42,16 @@ export class SourceMap{
             if(idx === charPos){
                 found = true;
             }
+            if(idx === this.src.length-1){
+                line = this.src.slice(start, idx+1);
+                break;
+            }
             if(c === '\n') {
-                start = idx;
                 if(found){
-                    line = this.src.slice(start, idx);
+                    line = this.src.slice(start, idx-1);
                     break;
                 }
+                start = idx+1;
                 lineNumber++;
             }
         }
