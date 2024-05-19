@@ -51,10 +51,21 @@ function run(cli: Cli){
 
     if(decomp) decompile(new Uint8Array(code));
     const interpreter = new Interpreter();
-    interpreter.init(code, inrack, error, outrack);
+    interpreter.init(code, error, {inrack, targetOutrack: outrack});
     interpreter.run();
     if(error.hasError) {console.log(error.message); interpreter.dmp(); return;}
-    console.log(interpreter.outbox);
+    console.log(interpreter.outrack);
+}
+
+function runUnsafe(src: string, inrack: number[]): Interpreter{
+    const err = new Error(src);
+    
+    const tokens = parse(src, err);
+    const code = compile(tokens, err);
+    const interpreter = new Interpreter();
+    interpreter.init(code, err, {inrack});
+    interpreter.run();
+    return interpreter;
 }
 
 function validate(cli: Cli){
@@ -75,13 +86,31 @@ function validate(cli: Cli){
     const code = compile(tokens, error);
     if(error.hasError) {console.log(error.message); return;}
     const interpreter = new Interpreter();
+    const puzzleInterpreter = new Interpreter();
     const puzzle = puzzleParser(puzzleSrc);
     if(!puzzle) throw 'oops';
     let testsPassed = true;
-    const numTests = puzzle.runs.length;
+    const numTests = puzzle.runs.length + puzzle.codeRuns.length;
     let testIdx = 1;
     for (const run of puzzle.runs) {
-        interpreter.init(code, run.inrack, error, run.outrack);
+        interpreter.init(code, error, {inrack: run.inrack, targetOutrack: run.outrack});
+        interpreter.run();
+        if(error.hasError){
+            console.log(`Test [${testIdx}/${numTests}] failed with following:`);
+            console.log(error.message);
+            testsPassed = false;
+            error.clear();
+        }
+        else{
+            console.log(`Test [${testIdx}/${numTests}] passed!`);
+        }
+        console.log("");
+        testIdx++;
+    }
+    for (const run of puzzle.codeRuns) {
+        const inrack = runUnsafe(run, []).outrack;
+        const targetOutrack = runUnsafe(puzzle.impl, inrack).outrack;        
+        interpreter.init(code, error, {inrack, targetOutrack: targetOutrack});
         interpreter.run();
         if(error.hasError){
             console.log(`Test [${testIdx}/${numTests}] failed with following:`);

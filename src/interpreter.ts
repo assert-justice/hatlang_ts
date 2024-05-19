@@ -1,7 +1,14 @@
 import { OpLookup } from "./op_lookup";
 import { Error } from "./error";
-import { SourceMap } from "./source_map";
 import { IP_HIGH_POS, IP_LOW_POS, STACK_POINTER_POS, STACK_SIZE } from "./constants";
+
+interface InitState{
+    inrack?: number[];
+    initStack?: number[];
+    targetStack?: number[];
+    targetOutrack?: number[];
+    blacklist?: number[];
+}
 
 export class Interpreter{
     // program: ArrayBuffer;
@@ -11,6 +18,7 @@ export class Interpreter{
     error = new Error("");
     fnMap: Map<number, ()=>void>;
     cycles = 0;
+    oldIp = 0;
     get ip(): number{
         const high = this.program[IP_HIGH_POS] << 8;
         const low = this.program[IP_LOW_POS];
@@ -36,10 +44,10 @@ export class Interpreter{
     }
     state: 'running' | 'paused' | 'stopped' = 'running';
     initialized = false;
-    inbox: number[] = [];
-    outbox: number[] = [];
+    inrack: number[] = [];
+    outrack: number[] = [];
     registers = [0,0,0,0,0,0,0,0,]
-    validOutbox?: number[];
+    targetOutrack?: number[];
     constructor(){
         this.fnMap = new Map();
         const addFn = (name: string, fn: ()=>void)=>{
@@ -80,15 +88,19 @@ export class Interpreter{
         addFn("rng", ()=>this.rng());
         addFn("dmp", ()=>this.dmp());
     }
-    init(program: ArrayBuffer, inbox: number[], error: Error, validOutbox?: number[]){
-        this.inbox = [...inbox];
+    // init(program: ArrayBuffer, inbox: number[], error: Error, validOutbox?: number[]){
+    init(program: ArrayBuffer, error: Error, initState: InitState){
+        this.inrack = initState.inrack ? [...initState.inrack] : [];
         this.ip = 0;
         this.sp = 0;
         this.state = "running";
         this.cycles = 0;
-        this.inbox.reverse();
-        this.outbox = [];
-        this.validOutbox = validOutbox;
+        this.inrack.reverse();
+        this.outrack = [];
+        if(initState.targetStack) for (const val of initState.targetStack) {
+            this.push(val);
+        }
+        this.targetOutrack = initState.targetOutrack ? [...initState.targetOutrack] : undefined;
         this.signedView = new Int8Array(program);
         this.program = new Uint8Array(program);
         this.error = error;
@@ -113,7 +125,7 @@ export class Interpreter{
         if(!this.error.hasError) this.state = 'running';
     }
     setError(message: string){
-        this.error.setErrorAtIdx(this.ip, message);
+        this.error.setErrorAtIdx(this.oldIp, message);
     }
     step(){
         this.cycles++;
@@ -155,8 +167,10 @@ export class Interpreter{
             default:
                 throw 'invalid arg, should be unreachable'
         }
+        this.oldIp = this.ip;
         this.ip += opLen;
         fn();
+        // TODO: check if ip is inbounds
     }
     pop(): number{
         // underflow check in step()
@@ -176,7 +190,7 @@ export class Interpreter{
     }
     inp(){
         // check if inbox is empty. if it is, halt. not necessarily an error
-        const val = this.inbox.pop();
+        const val = this.inrack.pop();
         if(!val){
             this.hlt();
             return;
@@ -185,14 +199,14 @@ export class Interpreter{
     }
     out(){
         // TODO: if in validation mode, triggers partial validation
-        this.outbox.push(this.pop());
-        if(!this.validOutbox) return;
-        if(this.outbox.length > this.validOutbox.length){
+        this.outrack.push(this.pop());
+        if(!this.targetOutrack) return;
+        if(this.outrack.length > this.targetOutrack.length){
             this.setError("Too many elements in outrack!");
             return;
         }
-        for(let idx = 0; idx < this.outbox.length; idx++){
-            if(this.outbox[idx] !== this.validOutbox[idx]){
+        for(let idx = 0; idx < this.outrack.length; idx++){
+            if(this.outrack[idx] !== this.targetOutrack[idx]){
                 this.setError("Invalid element in outrack!");
                 return;
             }
@@ -226,8 +240,11 @@ export class Interpreter{
     hlt(){
         // if in validate mode trigger final validate
         this.state = 'stopped';
-        if(this.validOutbox && this.validOutbox.length > this.outbox.length){
+        if(this.targetOutrack && this.targetOutrack.length > this.outrack.length){
             this.setError("Not enough elements in outrack!");
+        }
+        if(this.sp > 0){
+            this.setError("Stack must be empty at the end of execution!");
         }
     }
     rng(){
@@ -235,8 +252,8 @@ export class Interpreter{
         this.push(val);
     }
     dmp(){
-        console.log("inbox:", this.inbox);
-        console.log("outbox:", this.outbox);
+        console.log("inbox:", this.inrack);
+        console.log("outbox:", this.outrack);
         // print stack
         const stack: number[] = [];
         for(let idx = 0; idx < this.sp; idx++){
