@@ -1,6 +1,6 @@
 import { OpLookup } from "./op_lookup";
 import { Error } from "./error";
-import { IP_HIGH_POS, IP_LOW_POS, STACK_POINTER_POS, STACK_SIZE } from "./constants";
+import { IP_HIGH_POS, IP_LOW_POS, SRT_STACK_POINTER_POS, SRT_STACK_START, STACK_POINTER_POS, STACK_SIZE, STACK_START } from "./constants";
 
 interface InitState{
     inrack?: number[];
@@ -34,13 +34,27 @@ export class Interpreter{
         return this.program[STACK_POINTER_POS];
     }
     set sp(val: number){
+        // TODO: add bounds checking. Don't want this sucker to silently overflow
         this.program[STACK_POINTER_POS] = val;
     }
     get stackTop(): number{
-        return this.signedView[STACK_POINTER_POS + this.sp];
+        return this.signedView[STACK_START + this.sp];
     }
     set stackTop(val: number){
-        this.signedView[STACK_POINTER_POS + this.sp] = val;
+        this.signedView[STACK_START + this.sp] = val;
+    }
+    get srtSp(): number{
+        return this.program[SRT_STACK_POINTER_POS];
+    }
+    set srtSp(val: number){
+        // bounds checking in jsr/ret
+        this.program[SRT_STACK_POINTER_POS] = val;
+    }
+    get srtSpTop(): number{
+        return this.program[SRT_STACK_START + this.srtSp];
+    }
+    set srtSpTop(val: number){
+        this.program[SRT_STACK_START + this.srtSp] = val;
     }
     state: 'running' | 'paused' | 'stopped' = 'running';
     initialized = false;
@@ -81,6 +95,8 @@ export class Interpreter{
         addFn("jnz", ()=>{if(this.pop() !== 0)this.jmp()});
         addFn("jlz", ()=>{if(this.pop() < 0)this.jmp()});
         addFn("jgz", ()=>{if(this.pop() > 0)this.jmp()});
+        addFn("jsr", ()=>this.jsr());
+        addFn("ret", ()=>this.ret());
         addFn("lod", ()=>this.lod());
         addFn("sav", ()=>this.sav());
         addFn("hlt", ()=>this.hlt());
@@ -130,6 +146,7 @@ export class Interpreter{
     step(){
         this.cycles++;
         const code = this.program[this.ip];
+        
         if(code === 0){
             this.hlt();
             return;
@@ -139,6 +156,7 @@ export class Interpreter{
             this.setError(`Unrecognized opcode '${code}'`);
             return;
         }
+        
         const len = this.sp;
         
         if(op.pops > len){
@@ -218,16 +236,28 @@ export class Interpreter{
         this.ip = high + low;
     }
     jsr(){
+        if(this.srtSp >= 32){
+            this.setError("Subroutine stack overflow!");
+            return;
+        }
         const high = this.program[IP_HIGH_POS];
         const low = this.program[IP_LOW_POS];
-        this.push(high);
-        this.push(low);
+        this.srtSpTop = high;
+        this.srtSp++;
+        this.srtSpTop = low;
+        this.srtSp++;
         this.jmp();
     }
     ret(){
-        const low = this.pop();
-        const high = this.pop() >> 8;
-        this.ip = high + low;
+        if(this.srtSp <= 1){
+            this.setError("Subroutine stack underflow!");
+            return;
+        }
+        this.srtSp--;
+        this.program[IP_LOW_POS] = this.srtSpTop;
+        this.srtSp--;
+        this.program[IP_HIGH_POS] = this.srtSpTop;
+        
     }
     lod(){
         const r = this.program[this.ip-1] % 8;

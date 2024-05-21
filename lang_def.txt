@@ -19,8 +19,8 @@
 | JNZ | 0x22 | 1 | 0 | LABEL | Pops the top element. If it is not equal to zero jump to the following label|
 | JGZ | 0x23 | 1 | 0 | LABEL | Pops the top element. If it is greater than zero jump to the following label|
 | JLZ | 0x24 | 1 | 0 | LABEL | Pops the top element. If it is less than zero jump to the following label|
-| JSR | 0x25 | 0 | 2 | LABEL | Jump to subroutine, pushing the instruction pointer to the stack in two bytes|
-| RET | 0x26 | 2 | 0 | LABEL | Return from subroutine, popping the top two elements and using them as the instruction pointer|
+| JSR | 0x25 | 0 | 0 | LABEL | Jump to subroutine, pushing the instruction pointer to the stack in two bytes|
+| RET | 0x26 | 0 | 0 | NONE | Return from subroutine, popping the top two elements and using them as the instruction pointer|
 | Registers |
 | LOD | 0x30 | 0 | 1 | REGISTER | Load a value from the given register and push it|
 | SAV | 0x31 | 1 | 0 | REGISTER | Pop a value and save it to the given register|

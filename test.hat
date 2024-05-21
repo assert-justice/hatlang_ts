@@ -1,8 +1,21 @@
-; inboxes two numbers, adds them, and outboxes the result
+; generates "random" numbers in the range 0 to 10 inclusive
 
-inp
-inp
-sav &1
+psh 10
+lab #loop
+dup
+jez #done
+dec
+rng
+jsr #pos
 out
-lod &1
-;out
+jmp #loop
+
+lab #pos
+dup
+jgz #posdone
+neg
+lab #posdone
+ret
+
+lab #done
+del
