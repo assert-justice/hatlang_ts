@@ -4,9 +4,10 @@
 |DEL|0x03|1|0|NONE|Pop and delete the top element|
 |DUP|0x04|1|2|NONE|Duplicate the top element and push it|
 |SWP|0x05|2|2|NONE|Swap the top two elements and push them|
-|LEN|0x06|0|1|NONE|Push the length of the stack to the stack. This is the length *before* the length is pushed.|
-|PZE|0x07|0|1|NONE|Push a zero to the stack|
-|PSH|0x08|0|1|NUMBER|Push a number literal to the stack|
+|ROT|0x06|3|3|NONE|Rotate the top three elements, putting the third on top of the stack.|
+|LEN|0x07|0|1|NONE|Push the length of the stack to the stack. This is the length *before* the length is pushed.|
+|PZE|0x08|0|1|NONE|Push a zero to the stack|
+|PSH|0x09|0|1|NUMBER|Push a number literal to the stack|
 | Arithmetic |
 | INC | 0x10 | 1 | 1 | NONE | Increment the top element|
 | DEC | 0x11 | 1 | 1 | NONE | Decrement the top element| 

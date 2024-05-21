@@ -82,6 +82,7 @@ export class Interpreter{
             const b = this.pop();
             this.push(a); this.push(b);
         });
+        addFn("rot", ()=>this.rot())
         addFn("len", ()=>this.push(this.sp));
         addFn("pze", ()=>this.push(0));
         addFn("psh", ()=>this.push(this.signedView[this.ip-1]));
@@ -192,14 +193,14 @@ export class Interpreter{
     }
     pop(): number{
         // underflow check in step()
-        const res = this.stackTop;
         this.sp--;
+        const res = this.stackTop;
         return res;
     }
     push(val: number){
         // overflow check in step()
-        this.sp++;
         this.stackTop = val;
+        this.sp++;
     }
     bin(fn: (a: number, b: number)=>number){
         const b = this.pop();
@@ -229,6 +230,14 @@ export class Interpreter{
                 return;
             }
         }
+    }
+    rot(){
+        const a = this.pop();
+        const b = this.pop();
+        const c = this.pop();
+        this.push(b);
+        this.push(a);
+        this.push(c);
     }
     jmp(){
         const high = this.program[this.ip-2] << 8;
@@ -287,7 +296,7 @@ export class Interpreter{
         // print stack
         const stack: number[] = [];
         for(let idx = 0; idx < this.sp; idx++){
-            stack.push(this.signedView[STACK_POINTER_POS + 1 + idx]);
+            stack.push(this.signedView[STACK_START + idx]);
         }
         console.log("stack:", stack);
         

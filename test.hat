@@ -1,21 +1,7 @@
-; generates "random" numbers in the range 0 to 10 inclusive
-
+psh 5
 psh 10
-lab #loop
-dup
-jez #done
-dec
-rng
-jsr #pos
-out
-jmp #loop
-
-lab #pos
-dup
-jgz #posdone
-neg
-lab #posdone
-ret
-
-lab #done
-del
+psh 15
+dmp
+rot
+dmp
+out out out
